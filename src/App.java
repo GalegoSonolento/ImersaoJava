@@ -1,4 +1,8 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -24,18 +28,41 @@ public class App {
         var parser = new JsonParser();
         List<Map<String, String>> listaDeFilmes = parser.parse(body);
 
+        var dir = new File("figurinhas/");
+        dir.mkdir();
+
         //exibir e manipular os dados
-        for (int i = 0; i < 10; i++) {
+        var geradora = new GeradoraDeSticker();
+        for (int i = 0; i < 5; i++) {
             Map<String, String> filme = listaDeFilmes.get(i);
+
+            String urlimagem = filme.get("image");
+            String titulo = filme.get("title");
+
+            InputStream inputStream = new URL(urlimagem).openStream();
+            String nomeArquivo = "figurinhas/" + titulo + ".png";
+
             System.out.println("\u001b[1mTitulo: \u001b[m" + filme.get("title"));
             System.out.println("\u001b[1mImagem: \u001b[m" + filme.get("image"));
             System.out.println(filme.get("imDbRating"));
-            double numDoubleEstrelas = Double.parseDouble(filme.get("imDbRating"));
-            int numEstrela = (int) numDoubleEstrelas;
+            double rating = Double.parseDouble(filme.get("imDbRating"));
+            int numEstrela = (int) rating;
             for (int j = 1; j <= numEstrela; j++){
                 System.out.print("⭐");
             }
             System.out.println("\n");
+            String textoFigurinha;
+            InputStream imagemSelo;
+            if (rating >= 8) {
+                textoFigurinha = "Brabo";
+                imagemSelo = new FileInputStream(new File("selos/topper.jpg"));
+            }
+            else {
+                textoFigurinha = "HMMMMMMM.......";
+                imagemSelo = new FileInputStream(new File("selos/ruim.jpg"));
+            }
+
+            geradora.cria(inputStream, nomeArquivo, textoFigurinha, imagemSelo);
         }
     }
 }
