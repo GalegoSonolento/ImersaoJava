@@ -1,11 +1,7 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -15,54 +11,38 @@ public class App {
 
         //Realizar conexão https e buscar top 250 filmes
         //String imdbKey = System.getenv("IMDB_GIT_HANDLER");
-        String url = "https://raw.githubusercontent.com/alura-cursos/imersao-java-2-api/main/TopMovies.json";
-        //String url = imdbKey;
-        URI endereco =  URI.create(url);
-        var client = HttpClient.newHttpClient();
-        var request = HttpRequest.newBuilder(endereco).GET().build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        String body = response.body();
-        //System.out.println(body);
 
-        //Pegar dados interessantes (título, poster, classificação - nota)
-        var parser = new JsonParser();
-        List<Map<String, String>> listaDeFilmes = parser.parse(body);
+        //String url = imdbKey;
+
+        //String url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&start_date=2022-06-12&end_date=2022-06-14";
+        //String url = "https://URLBIZONHAapi.nasa.gov/planetary/apod?api_key=DEMO_KEY&start_date=2022-06-12&end_date=2022-06-14";
+        //String url = "https://raw.githubusercontent.com/alura-cursos/imersao-java-2-api/main/TopMovies.json";
+
+        API api = API.IMDB_TOP_MOVIES;
+
+        String url = api.getUrl();
+        ExtratorDeConteudo extrator = api.getExrator();
+
+        var http = new ClienteHttp();
+        String json = http.buscaDados(url);
+
+
+        List<Conteudo> conteudos = extrator.extraiConteudos(json);
 
         var dir = new File("figurinhas/");
         dir.mkdir();
 
         //exibir e manipular os dados
         var geradora = new GeradoraDeSticker();
-        for (int i = 0; i < 5; i++) {
-            Map<String, String> filme = listaDeFilmes.get(i);
+        for (int i = 0; i < 3; i++) {
+            Conteudo conteudo = conteudos.get(i);
 
-            String urlimagem = filme.get("image");
-            String titulo = filme.get("title");
+            InputStream inputStream = new URL(conteudo.urlImagem()).openStream();
+            String nomeArquivo = "figurinhas/" + conteudo.titulo() + ".png";
 
-            InputStream inputStream = new URL(urlimagem).openStream();
-            String nomeArquivo = "figurinhas/" + titulo + ".png";
 
-            System.out.println("\u001b[1mTitulo: \u001b[m" + filme.get("title"));
-            System.out.println("\u001b[1mImagem: \u001b[m" + filme.get("image"));
-            System.out.println(filme.get("imDbRating"));
-            double rating = Double.parseDouble(filme.get("imDbRating"));
-            int numEstrela = (int) rating;
-            for (int j = 1; j <= numEstrela; j++){
-                System.out.print("⭐");
-            }
-            System.out.println("\n");
-            String textoFigurinha;
-            InputStream imagemSelo;
-            if (rating >= 8) {
-                textoFigurinha = "Brabo";
-                imagemSelo = new FileInputStream(new File("selos/topper.jpg"));
-            }
-            else {
-                textoFigurinha = "HMMMMMMM.......";
-                imagemSelo = new FileInputStream(new File("selos/ruim.jpg"));
-            }
-
-            geradora.cria(inputStream, nomeArquivo, textoFigurinha, imagemSelo);
+            geradora.cria(inputStream, nomeArquivo);
+            System.out.println(conteudo.titulo());
         }
     }
 }
