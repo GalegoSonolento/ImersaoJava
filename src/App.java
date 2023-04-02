@@ -34,7 +34,7 @@ public class App {
 
         //exibir e manipular os dados
         var geradora = new GeradoraDeSticker();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             Conteudo conteudo = conteudos.get(i);
 
             InputStream inputStream = new URL(conteudo.urlImagem()).openStream();
